@@ -297,13 +297,15 @@ function theme_webform_edit_multifile($form) {
 function _webform_render_multifile($component, $value = NULL, $filter = TRUE) {
   drupal_add_js(drupal_get_path('module', 'webform_multifile') .'/multifile/jquery.MultiFile.js', 'module');
   drupal_add_js(drupal_get_path('module', 'webform_multifile') .'/webform_multifile.js', 'module');
+  $id = 'webform-component-'. str_replace('_', '-', $component['form_key']);
+  drupal_add_js(array('webform_multifile' => array('id' => $id)), 'setting');
+
   if (!isset($component['extra']['attributes']['class'])) {
     $component['extra']['attributes']['class'] = 'form-item multi';
   }
   else {
     $component['extra']['attributes']['class'] .= ' multi';
   }
-  $id = 'webform-component-'. $component['form_key'];
   
   $node = node_load($component['nid']);
   $form_key = implode('_', webform_component_parent_keys($node, $component));
