@@ -448,7 +448,7 @@ function _webform_validate_multifile($element, &$form_state) {
   $component = $element['#webform_component'];
   $form_key = implode('_', $element['#parents']);
 
-  if (empty($_FILES['files']['name'][$form_key]) || empty($_FILES['files']['name'][$form_key][0])) {
+  if (!array_key_exists($form_key, $_FILES['files']['name'])) {
     return;
   }
 
@@ -519,7 +519,7 @@ function _webform_validate_multifile($element, &$form_state) {
  */
 function _webform_submit_multifile($component, $value) {
   $old_fids = isset($value['_old_fids']) ? unserialize($value['_old_fids']) : NULL;
-
+  
   if ($fids = $value['_fids']) {
     $files = webform_get_multifile($fids);
     foreach ($files as $file) {
@@ -728,13 +728,19 @@ function _webform_multifile_convert_files_array($form_key) {
   // file_save_upload expects the usual Forms API _FILES structure, which is
   // incompatible to jquery.MultiFile.js
   $keys = array();
-  foreach (array_keys($_FILES['files']['name'][$form_key]) as $key) {
+  foreach ($_FILES['files']['type'][$form_key] as $key => $empty) {
     $newkey = $form_key . $key;
-    $_FILES['files']['name'][$newkey] = $_FILES['files']['name'][$form_key][$key];
+    if (empty($_FILES['files']['name'][$form_key][$key])) {
+      $_FILES['files']['name'][$newkey] = $_FILES['files']['orig_name'][$form_key][$key];
+    }
+    else {
+      $_FILES['files']['name'][$newkey] = $_FILES['files']['name'][$form_key];
+    }
     $_FILES['files']['type'][$newkey] = $_FILES['files']['type'][$form_key][$key];
     $_FILES['files']['tmp_name'][$newkey] = $_FILES['files']['tmp_name'][$form_key][$key];
     $_FILES['files']['error'][$newkey] = $_FILES['files']['error'][$form_key][$key];
     $_FILES['files']['size'][$newkey] = $_FILES['files']['size'][$form_key][$key];
+    $_FILES['files']['orig_name'][$newkey] = $_FILES['files']['orig_name'][$form_key][$key];
     $keys[] = $newkey;
   }
   unset($_FILES['files']['name'][$form_key]);
@@ -742,5 +748,6 @@ function _webform_multifile_convert_files_array($form_key) {
   unset($_FILES['files']['tmp_name'][$form_key]);
   unset($_FILES['files']['error'][$form_key]);
   unset($_FILES['files']['size'][$form_key]);
+  unset($_FILES['files']['orig_name'][$form_key]);
   return $keys;
 }
