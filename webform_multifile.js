@@ -5,11 +5,10 @@ Drupal.behaviors.webform_multifile = function (context) {
       $('input[type=file].multi.'+MultiFile_fields[i].id).MultiFile(MultiFile_fields[i].properties);
     }
   }
-  
+
   // Add the extra brakets to all the Multifile fields
   $("input[type=file].multi").each(function(){
     var field = $(this);
     field.attr('name', field.attr('name') + '[]');
   });
 }
-

@@ -452,7 +452,7 @@ function _webform_required_multifile($element, $form_state) {
 function _webform_validate_multifile($element, &$form_state) {
   $component = $element['#webform_component'];
   $form_key = implode('_', $element['#parents']);
-
+  
   if (empty($_FILES['files']['name'][$form_key]) || empty($_FILES['files']['name'][$form_key][0])) {
     return;
   }
