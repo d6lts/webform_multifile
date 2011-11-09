@@ -569,10 +569,17 @@ function _webform_display_multifile($component, $value, $format = 'html') {
 function theme_webform_display_multifile($element) {
   $output = '';
   foreach ($element['#value'] as $file) {
-    $url = !empty($file) ? webform_multifile_url($file->filepath) : t('no upload');
-    $output .= '<div class="multifile-file">';
-    $output .= !empty($file) ? ($element['#format'] == 'text' ? $url : l($file->filename, $url)) : ' ';
-    $output .= '</div>';
+    if (!empty($file)) {
+      $url = webform_multifile_url($file->filepath);
+      if ($element['#format'] == 'html') {
+        $output .= '<div class="multifile-file">';
+        $output .= l($file->filename, $url);
+        $output .= '</div>';
+      }
+      else {
+        $output .= $file->filename . ': ' . $url . "\n";
+      }
+    }
   }
   return $output;
 }
