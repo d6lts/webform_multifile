@@ -689,6 +689,20 @@ function _webform_csv_data_multifile($component, $export_options, $value) {
 }
 
 /**
+ * Implementation of _webform_get_files_component().
+ */
+function _webform_get_files_multifile($value) {
+  $files = array();
+  if ($fids = (isset($value[0]) ? unserialize($value[0]) : FALSE)) {
+    foreach (webform_get_multifile($fids) as $file) {
+      $files[] = $file;
+    }
+  }
+
+  return $files;
+}
+
+/**
  * Helper function to create proper file names for uploaded file.
  *
  * Note: This is identical to webform_file_name().
