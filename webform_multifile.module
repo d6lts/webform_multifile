@@ -5,7 +5,7 @@
  */
 function webform_multifile_menu() {
   $items[] = array();
-  
+
   $items['node/%webform_menu/submission/%webform_menu_submission/multifile_delete/%/%'] = array(
     'title' => 'Delete multifile upload',
     'load arguments' => array(1),
@@ -22,7 +22,7 @@ function webform_multifile_menu() {
     'access arguments' => array('edit all webform submissions'),
     'type' => MENU_CALLBACK,
   );
-  
+
   return $items;
 }
 

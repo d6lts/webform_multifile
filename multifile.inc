@@ -306,7 +306,7 @@ function _webform_render_multifile($component, $value = NULL, $filter = TRUE) {
   else {
     $component['extra']['attributes']['class'] .= ' multi MultiFile-identifier-'. $id;
   }
-  
+
   $node = node_load($component['nid']);
   $form_key = implode('_', webform_component_parent_keys($node, $component));
   $current_types = isset($component['extra']['filtering']['types']) ? $component['extra']['filtering']['types'] : array();
@@ -324,10 +324,10 @@ function _webform_render_multifile($component, $value = NULL, $filter = TRUE) {
       "MultiFile_fields.push({id :'$id', properties : {".
         //'namePattern: "'.$component['form_key'].'[]",'.
         //"list: '#$id .inner', $events".
-        "accept:'".join('|', $current_types)."', STRING: {".
-          "remove:'".t('Remove')."',".
-          "denied:'".t('You are kindly asked not to submit !ext files in this form.', array('!ext' => '$ext'))."',".
-          "duplicate:'".t('The file !file has already been selected and will be uploaded once you submit this form.', array('!file' => '$file'))."'".
+        "accept:'" . join('|', $current_types) . "', STRING: {".
+          "remove:'" . t('Remove') . "',".
+          "denied:'" . t('You are kindly asked not to submit !ext files in this form.', array('!ext' => '$ext')) . "',".
+          "duplicate:'" . t('The file !file has already been selected and will be uploaded once you submit this form.', array('!file' => '$file')) . "'".
         "}".
       "}});".
       // If jQuery is already loaded, grab the newest item from the array and use it to run Multifile
@@ -452,7 +452,7 @@ function _webform_required_multifile($element, $form_state) {
 function _webform_validate_multifile($element, &$form_state) {
   $component = $element['#webform_component'];
   $form_key = implode('_', $element['#parents']);
-  
+
   if (empty($_FILES['files']['name'][$form_key]) || empty($_FILES['files']['name'][$form_key][0])) {
     return;
   }
@@ -476,7 +476,7 @@ function _webform_validate_multifile($element, &$form_state) {
 
   foreach ($_FILES['files']['name'][$form_key] as $key => $filename) {
     $dot = strrpos($filename, '.');
-    $extension = drupal_strtolower(substr($filename, $dot+1));
+    $extension = drupal_strtolower(drupal_substr($filename, $dot + 1));
     $file_error = FALSE;
     if (!empty($extensions) && !in_array($extension, $extensions)) {
       form_error($element, t("Files with the '%ext' extension are not allowed, please upload a file with a %exts extension.", array('%ext' => $extension, '%exts' => $extension_list)));
@@ -531,7 +531,7 @@ function _webform_submit_multifile($component, $value) {
       // Save any new files permanently.
       file_set_status($file, FILE_STATUS_PERMANENT);
     }
-    
+
     if ($old_fids) {
       $fids = array_merge($old_fids, $fids);
     }
@@ -550,7 +550,7 @@ function _webform_submit_multifile($component, $value) {
  */
 function _webform_display_multifile($component, $value, $format = 'html') {
   $fids = isset($value[0]) ? unserialize($value[0]) : NULL;
-  
+
   return array(
      '#title' => $component['name'],
      '#value' => $fids ? webform_get_multifile($fids) : NULL,
@@ -759,7 +759,7 @@ function _webform_multifile_convert_files_array($form_key) {
     }
     else {
       $_FILES['files']['name'][$newkey] = $_FILES['files']['name'][$form_key];
-    }    
+    }
     $_FILES['files']['type'][$newkey] = $_FILES['files']['type'][$form_key][$key];
     $_FILES['files']['tmp_name'][$newkey] = $_FILES['files']['tmp_name'][$form_key][$key];
     $_FILES['files']['error'][$newkey] = $_FILES['files']['error'][$form_key][$key];
