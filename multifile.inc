@@ -384,10 +384,10 @@ function theme_webform_render_multifile($element) {
   if ($fids = unserialize($value)) {
     $suffix = '';
     foreach (webform_get_multifile($fids) as $file) {
-      $suffix .= '<div class="multifile-file">';
+      $suffix .= '<div class="multifile-file"> ';
       $suffix .= l(t('Download !filename', array('!filename' => webform_multifile_name($file->filepath))), webform_multifile_url($file->filepath));
-      $suffix .= ' (' . l(t('Delete'), "node/$webform_nid/submission/$submission_id/multifile_delete/$component_id/$file->fid") . ')';
-      $suffix .= '</div>';
+      $suffix .= ' ( ' . l(t('Delete'), "node/$webform_nid/submission/$submission_id/multifile_delete/$component_id/$file->fid") . ' )';
+      $suffix .= ' </div>';
     }
     $firstchild = array_shift(array_keys($element));
     $element[$firstchild]['#suffix'] = $suffix;
@@ -572,9 +572,9 @@ function theme_webform_display_multifile($element) {
     if (!empty($file)) {
       $url = webform_multifile_url($file->filepath);
       if ($element['#format'] == 'html') {
-        $output .= '<div class="multifile-file">';
+        $output .= '<div class="multifile-file"> ';
         $output .= l($file->filename, $url);
-        $output .= '</div>';
+        $output .= ' </div>';
       }
       else {
         $output .= $file->filename . ': ' . $url . "\n";

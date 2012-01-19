@@ -3,3 +3,7 @@ name = Webform multifile
 description = Adds a new field to webform to allow multiple file uploads
 core = 6.x
 package = Webform
+
+dependencies[] = webform
+dependencies[] = transliteration
+
