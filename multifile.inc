@@ -568,16 +568,18 @@ function _webform_display_multifile($component, $value, $format = 'html') {
  */
 function theme_webform_display_multifile($element) {
   $output = '';
-  foreach ($element['#value'] as $file) {
-    if (!empty($file)) {
-      $url = webform_multifile_url($file->filepath);
-      if ($element['#format'] == 'html') {
-        $output .= '<div class="multifile-file"> ';
-        $output .= l($file->filename, $url);
-        $output .= ' </div>';
-      }
-      else {
-        $output .= $file->filename . ': ' . $url . "\n";
+  if (isset($element['#value']) && !empty($element['#value'])) {
+    foreach ($element['#value'] as $file) {
+      if (!empty($file)) {
+        $url = webform_multifile_url($file->filepath);
+        if ($element['#format'] == 'html') {
+          $output .= '<div class="multifile-file"> ';
+          $output .= l($file->filename, $url);
+          $output .= ' </div>';
+        }
+        else {
+          $output .= $file->filename . ': ' . $url . "\n";
+        }
       }
     }
   }
