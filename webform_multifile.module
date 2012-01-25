@@ -105,11 +105,11 @@ function webform_multifile_file_download($uri) {
  * ensure you have a db backup prior to running it.
  */
 function webform_multifile_convert_62_data() {
-  $result = db_query("SELECT * FROM {webform_component} WHERE type = 'multifile'");
+  $result = db_select('webform_component', 'wc')->fields('wc')->condition('type', 'multifile')->execute();
   $count = 0;
-  while ($component = db_fetch_object($result)) {
-    $result2 = db_query("SELECT * FROM {webform_submitted_data} WHERE cid = %d", $component->cid);
-    while ($submission = db_fetch_object($result2)) {
+  while ($component = $result->fetchObject()) {
+    $result2 = db_select('webform_submitted_data', 'wsd')->fields('wsd')->condition('cid', $component->cid)->execute();
+    while ($submission = $result2->fetchObject()) {
       $data = unserialize($submission->data);
       // The old multifile used an object to store the data.
       if (is_object($data[0])) {
@@ -119,7 +119,7 @@ function webform_multifile_convert_62_data() {
           $fids[] = $file->fid;
         }
         $data = serialize($fids);
-        db_query("UPDATE {webform_submitted_data} SET data = '%s' WHERE nid = %d AND sid = %d AND cid = %d", array($data, $submission->nid, $submission->sid, $submission->cid));
+        db_update('webform_submitted_data')->fields(array('data' => $data))->condition('nid', $submission->nid)->condition('sid', $submission->sid)->condition('cid', $submission->cid)->execute();
       }
     }
   }
