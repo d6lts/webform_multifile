@@ -1,9 +1,12 @@
 ; $Id$
 name = Webform multifile
 description = Adds a new field to webform to allow multiple file uploads
-core = 6.x
+core = 7.x
 package = Webform
 
 dependencies[] = webform
 dependencies[] = transliteration
 
+files[] = multifile.inc
+files[] = webform_multifile.install
+files[] = webform_multifile.module

@@ -21,11 +21,14 @@ function _webform_defaults_multifile() {
         'addextensions' => '',
         'size' => 800,
       ),
-      'savelocation' => '',
+      'scheme' => 'public',
+      'directory' => '',
+      'progress_indicator' => 'throbber',
       'width' => '',
       'title_display' => 0,
       'description' => '',
       'attributes' => array(),
+      'private' => FALSE,
     ),
   );
 }
@@ -36,13 +39,13 @@ function _webform_defaults_multifile() {
 function _webform_theme_multifile() {
   return array(
     'webform_edit_multifile' => array(
-      'arguments' => array('form' => NULL),
+      'render element' => 'form',
     ),
     'webform_render_multifile' => array(
-      'arguments' => array('element' => NULL),
+      'render element' => 'element',
     ),
     'webform_display_multifile' => array(
-      'arguments' => array('element' => NULL),
+      'render element' => 'element',
     ),
   );
 }
@@ -53,6 +56,8 @@ function _webform_theme_multifile() {
 function _webform_edit_multifile($component) {
     $form = array();
     $form['#theme'] = 'webform_edit_multifile';
+    $form['#element_validate'] = array('_webform_edit_file_check_directory');
+    $form['#after_build'] = array('_webform_edit_file_check_directory');
 
     $form['validation']['filtering'] = array(
       '#element_validate' => array('_webform_edit_multifile_filtering_validate'),
@@ -124,15 +129,39 @@ function _webform_edit_multifile($component) {
       '#parents' => array('extra', 'filtering', 'size'),
       '#element_validate' => array('_webform_edit_multifile_size_validate'),
     );
-    $form['extra']['savelocation'] = array(
+    $scheme_options = array();
+    foreach (file_get_stream_wrappers(STREAM_WRAPPERS_WRITE_VISIBLE) as $scheme => $stream_wrapper) {
+      $scheme_options[$scheme] = $stream_wrapper['name'];
+    }
+    $form['extra']['scheme'] = array(
+      '#type' => 'radios',
+      '#title' => t('Upload destination'),
+      '#options' => $scheme_options,
+      '#default_value' => $component['extra']['scheme'],
+      '#description' => t('Private file storage has significantly more overhead than public files, but restricts file access to users who can view submissions.'),
+      '#weight' => 4,
+      '#access' => count($scheme_options) > 1,
+    );
+    $form['extra']['directory'] = array(
       '#type' => 'textfield',
-      '#title' => t('Upload Directory'),
-      '#default_value' => $component['extra']['savelocation'],
-      '#description' => t('Webform uploads are always saved in the site files directory. You may optionally specify a subfolder to store your files.'),
-      '#weight' => 3,
-      '#field_prefix' => file_directory_path() . '/webform/',
-      '#element_validate' => array('_webform_edit_multifile_check_directory'),
-      '#after_build' => array('_webform_edit_multifile_check_directory'),
+      '#title' => t('Upload directory'),
+      '#default_value' => $component['extra']['directory'],
+      '#description' => t('You may optionally specify a sub-directory to store your files.'),
+      '#weight' => 5,
+      '#field_prefix' => 'webform/',
+    );
+    $form['display']['progress_indicator'] = array(
+      '#type' => 'radios',
+      '#title' => t('Progress indicator'),
+      '#options' => array(
+        'throbber' => t('Throbber'),
+        'bar' => t('Bar with progress meter'),
+      ),
+      '#default_value' => $component['extra']['progress_indicator'],
+      '#description' => t('The throbber display does not show the status of uploads but takes up less space. The progress bar is helpful for monitoring progress on large uploads.'),
+      '#weight' => 16,
+      '#access' => file_progress_implementation(),
+      '#parents' => array('extra', 'progress_indicator'),
     );
     $form['display']['width'] = array(
       '#type' => 'textfield',
@@ -209,7 +238,8 @@ function _webform_edit_multifile_filtering_validate($element, &$form_state) {
   form_set_value($element['types'], $extensions, $form_state);
 }
 
-function theme_webform_edit_multifile($form) {
+function theme_webform_edit_multifile($variables) {
+  $form = $variables['form'];
   // Add a little JavaScript to check all the items in one type.
   $javascript = '
     function check_category_boxes() {
@@ -232,7 +262,7 @@ function theme_webform_edit_multifile($form) {
       $row[] = $form['validation']['filtering']['types'][$filtergroup]['#title'];
       $row[] = '&nbsp;';
       // Convert the checkboxes into individual form-items.
-      $checkboxes = expand_checkboxes($form['validation']['filtering']['types'][$filtergroup]);
+      $checkboxes = form_process_checkboxes($form['validation']['filtering']['types'][$filtergroup]);
       // Render the checkboxes in two rows.
       $checkcount = 0;
       $jsboxes = '';
@@ -283,10 +313,12 @@ function theme_webform_edit_multifile($form) {
 
   // Create the table inside the form.
   $form['validation']['filtering']['types']['table'] = array(
-    '#value' => theme('table', $header, $rows)
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
   );
 
-  $output = drupal_render($form);
+  $output = drupal_render_children($form);
 
   return $output;
 }
@@ -295,17 +327,11 @@ function theme_webform_edit_multifile($form) {
  * Implementation of _webform_render_component().
  */
 function _webform_render_multifile($component, $value = NULL, $filter = TRUE) {
-  drupal_add_js(drupal_get_path('module', 'webform_multifile') .'/multifile/jquery.MultiFile.js', 'module');
-  drupal_add_js(drupal_get_path('module', 'webform_multifile') .'/webform_multifile.js', 'module');
+  drupal_add_js(drupal_get_path('module', 'webform_multifile') .'/multifile/jquery.MultiFile.js');
+  drupal_add_js(drupal_get_path('module', 'webform_multifile') .'/webform_multifile.js');
   $id = 'MultiFile-identifier-'. str_replace('_', '-', $component['form_key']);
   //drupal_add_js(array('webform_multifile' => array('id' => $id)), 'setting');
-
-  if (!isset($component['extra']['attributes']['class'])) {
-    $component['extra']['attributes']['class'] = 'form-item multi MultiFile-identifier-'. $id;
-  }
-  else {
-    $component['extra']['attributes']['class'] .= ' multi MultiFile-identifier-'. $id;
-  }
+  $component['extra']['attributes']['class'][] = 'form-item multi MultiFile-identifier-'. $id;
 
   $node = node_load($component['nid']);
   $form_key = implode('_', webform_component_parent_keys($node, $component));
@@ -331,7 +357,7 @@ function _webform_render_multifile($component, $value = NULL, $filter = TRUE) {
         "}".
       "}});".
       // If jQuery is already loaded, grab the newest item from the array and use it to run Multifile
-      "if (window.jQuery) { $('input[type=file].multi.$id').MultiFile(MultiFile_fields.pop().properties)}".
+      "if (window.jQuery) { jQuery('input[type=file].multi.$id').MultiFile(MultiFile_fields.pop().properties)}".
     "\n/* ]]> */\n</script>",
     '#element_validate' => array(
       '_webform_validate_multifile',
@@ -339,13 +365,13 @@ function _webform_render_multifile($component, $value = NULL, $filter = TRUE) {
     ),
     '#pre_render' => array('webform_element_title_display'),
     '#webform_component' => $component,
+    '#upload_location' => $component['extra']['scheme'] . '://webform/' . $component['extra']['directory'],
   );
   $element['#webform_required'] = $component['mandatory'];
   $element['#webform_form_key'] = $form_key;
   $element['#weight'] = $component['weight'];
   $element['#theme'] = 'webform_render_multifile';
-  $element['#theme_wrappers'] = array('webform_element_wrapper');
-  $element['#post_render'] = array('webform_element_wrapper');
+  $element['#theme_wrappers'] = array('webform_element');
   $element['#webform_component'] = $component;
 
   // Change the 'width' option to the correct 'size' option.
@@ -364,14 +390,14 @@ function _webform_render_multifile($component, $value = NULL, $filter = TRUE) {
     '#type' => 'hidden',
     '#value' => isset($value[0]) ? $value[0] : NULL,
   );
-
   return $element;
 }
 
 /**
  * Render a File component.
  */
-function theme_webform_render_multifile($element) {
+function theme_webform_render_multifile($variables) {
+  $element = $variables['element'];
   // Add information about the existing file, if any.
   if (isset($element['#default_value'])) {
     $element['_fids']['#value'] = $element['#default_value'];
@@ -400,9 +426,7 @@ function theme_webform_render_multifile($element) {
   }
 
   $output = '';
-  foreach (element_children($element) as $key) {
-    $output .= drupal_render($element[$key]);
-  }
+  $output = drupal_render_children($element);
   return $output;
 }
 
@@ -493,11 +517,12 @@ function _webform_validate_multifile($element, &$form_state) {
 
   // Save the file to a temporary location.
   if (!$file_error) {
-    $upload_dir = file_directory_path() . '/webform/' . $component['extra']['savelocation'];
-    if (file_check_directory($upload_dir, FILE_CREATE_DIRECTORY)) {
+    $upload_dir = $component['extra']['scheme'] . '://webform/' . $component['extra']['directory'];
+    if (file_prepare_directory($upload_dir, FILE_CREATE_DIRECTORY)) {
       $keys = _webform_multifile_convert_files_array($form_key);
       $fids = array();
       foreach ($keys as $key) {
+
         $file = file_save_upload($key, array(), $upload_dir);
         if ($file) {
           @chmod($file->filepath, 0664);
@@ -529,7 +554,9 @@ function _webform_submit_multifile($component, $value) {
     $files = webform_get_multifile($fids);
     foreach ($files as $file) {
       // Save any new files permanently.
-      file_set_status($file, FILE_STATUS_PERMANENT);
+      $file = (object)$file;
+      $file->status = FILE_STATUS_PERMANENT;
+      file_save($file);
     }
 
     if ($old_fids) {
@@ -550,14 +577,12 @@ function _webform_submit_multifile($component, $value) {
  */
 function _webform_display_multifile($component, $value, $format = 'html') {
   $fids = isset($value[0]) ? unserialize($value[0]) : NULL;
-
   return array(
      '#title' => $component['name'],
      '#value' => $fids ? webform_get_multifile($fids) : NULL,
      '#weight' => $component['weight'],
      '#theme' => 'webform_display_multifile',
-     '#theme_wrappers' => $format == 'html' ? array('webform_element', 'webform_element_wrapper') : array('webform_element_text'),
-     '#post_render' => array('webform_element_wrapper'),
+     '#theme_wrappers' => $format == 'html' ? array('webform_element') : array('webform_element_text'),
      '#webform_component' => $component,
      '#format' => $format,
   );
@@ -566,12 +591,13 @@ function _webform_display_multifile($component, $value, $format = 'html') {
 /**
  * Format the output of text data for this component
  */
-function theme_webform_display_multifile($element) {
+function theme_webform_display_multifile($variables) {
+  $element = $variables['element'];
   $output = '';
   if (isset($element['#value']) && !empty($element['#value'])) {
     foreach ($element['#value'] as $file) {
       if (!empty($file)) {
-        $url = webform_multifile_url($file->filepath);
+        $url = webform_multifile_url($file->uri);
         if ($element['#format'] == 'html') {
           $output .= '<div class="multifile-file"> ';
           $output .= l($file->filename, $url);
@@ -593,8 +619,7 @@ function _webform_delete_multifile($component, $value) {
   // Delete a set of files on an individual submission.
   $fids = isset($value[0]) ? unserialize($value[0]) : NULL;
   foreach (webform_get_multifile($fids) as $file) {
-    file_delete($file->filepath);
-    db_query("DELETE FROM {files} WHERE fid = '%d'", $file->fid);
+    file_delete($file);
   }
 }
 
@@ -602,19 +627,24 @@ function _webform_delete_multifile($component, $value) {
  * Implementation of _webform_analysis_component().
  */
 function _webform_analysis_multifile($component, $sids = array()) {
-  $placeholders = count($sids) ? array_fill(0, count($sids), "'%s'") : array();
-  $sidfilter = count($sids) ? " AND sid in (" . implode(",", $placeholders) . ")" : "";
-  $query = 'SELECT data ' .
-    ' FROM {webform_submitted_data} ' .
-    ' WHERE nid = %d ' .
-    ' AND cid = %d' . $sidfilter;
+
+  $q = db_select('webform_submitted_data', 'wsd')
+    ->fields('wsd', array('data'))
+    ->condition('nid', $component['nid'])
+    ->condition('cid', $component['cid']);
+
+  if (!empty($sids)) {
+    $q->condition('sid', $sids);
+  }
+
+  $result = $q->execute();
+
   $nonblanks = 0;
   $sizetotal = 0;
   $submissions = 0;
-
-  $result = db_query($query, array_merge(array($component['nid'], $component['cid']), $sids));
   $numfiles = 0;
-  while ($data = db_fetch_array($result)) {
+  
+  while ($data = $result->fetchAssoc()) {
     if ($fids = unserialize($data['data'])) {
       $counter = 0;
       foreach (webform_get_multifile($fids) as $file) {
@@ -646,7 +676,7 @@ function _webform_table_multifile($component, $value) {
   if ($fids = (isset($value[0]) ? unserialize($value[0]) : FALSE)) {
     foreach (webform_get_multifile($fids) as $file) {
       if (!empty($file->fid)) {
-        $link = l(webform_multifile_name($file->filename), webform_multifile_url($file->filepath));
+        $link = l(webform_multifile_name($file->uri), webform_multifile_url($file->uri));
         $link .= ' (' . (int) ($file->filesize/1024) . ' KB)';
         $links[] = $link;
       }
@@ -677,7 +707,7 @@ function _webform_csv_data_multifile($component, $export_options, $value) {
   $sizes = array();
   if ($fids = (isset($value[0]) ? unserialize($value[0]) : FALSE)) {
     foreach (webform_get_multifile($fids) as $file) {
-      $filenames[] = webform_multifile_url($file->filepath);
+      $filenames[] = webform_multifile_url($file->uri);
       $sizes[] = (int) ($file->filesize/1024);
     }
   }
@@ -722,10 +752,9 @@ function webform_multifile_name($filepath) {
  *
  * Note: This function is identical to webform_file_url
  */
-function webform_multifile_url($filepath) {
-  if (!empty($filepath)) {
-    $info = pathinfo($filepath);
-    $file_url = file_create_url($info['dirname'] . '/' . rawurlencode($info['basename']));
+function webform_multifile_url($uri) {
+  if (!empty($uri)) {
+    $file_url = file_create_url($uri);
   }
   return isset($file_url) ? $file_url : '';
 }
@@ -736,13 +765,14 @@ function webform_multifile_url($filepath) {
 function webform_get_multifile($fids) {
   static $files;
   $allfiles = array();
+  if (empty($fids)) return array();
   foreach ($fids as $fid) {
     if (!isset($files[$fid])) {
       if (empty($fid)) {
         $files[$fid] = FALSE;
       }
       else {
-        $files[$fid] = db_fetch_object(db_query("SELECT * FROM {files} WHERE fid = %d", $fid));
+        $files[$fid] = file_load($fid);
       }
     }
     $allfiles[$fid] = $files[$fid];
@@ -787,7 +817,8 @@ function _webform_attachments_multifile($component, $value) {
   $return_files = array();
   foreach ($fids as $fid) {
     if (!isset($files[$fid])) {
-      $file = db_fetch_array(db_query("SELECT * FROM {files} WHERE fid = %d", $fid));
+      $file = file_load($fid);
+      $file->filepath = $file->uri;
       $files[$fid] = $file;
     }
     $return_files[] = $files[$fid];
