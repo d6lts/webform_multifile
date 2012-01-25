@@ -1,0 +1,26 @@
+<?php
+/**
+ * Implements hook_requirements().
+ */
+function webform_multifile_requirements() {
+  $t = get_t();
+  $info_file = drupal_get_path('module', 'transliteration') . '/transliteration.info';
+  $info = drupal_parse_info_file($info_file);
+  $requirements['transliteration'] = array(
+    'title' => $t('Transliteration'),
+    'value' => $info['version'],
+  );
+  $version = explode('-', $info['version']);
+  $version = explode('.', $version[1]);
+  //check for latest dev version (format = 6.x-3.x-dev)
+  if (((int)$version[0] <= 3) && $version[1] != 'x') {
+    //check version (format = 6.x-3.0)
+    if (((int)$version[0] < 3) || ((int)$version[0] == 3 && (int)$version[1] <= 0)) {
+      $requirements['transliteration']['description'] = $t('The Transliteration
+        module\'s version needs to be 3.0 or higher. If that version is not yet
+        available, you need to use Transliteration\'s latest dev version.');
+      $requirements['transliteration']['severity'] = REQUIREMENT_ERROR;
+    }
+  }
+  return $requirements;
+}
