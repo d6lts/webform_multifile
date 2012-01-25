@@ -777,3 +777,20 @@ function _webform_multifile_convert_files_array($form_key) {
   unset($_FILES['files']['orig_name'][$form_key]);
   return $keys;
 }
+
+/**
+ * Implements _webform_attachments_component().
+ */
+function _webform_attachments_multifile($component, $value) {
+  static $files = array();
+  $fids = unserialize($value[0]);
+  $return_files = array();
+  foreach ($fids as $fid) {
+    if (!isset($files[$fid])) {
+      $file = db_fetch_array(db_query("SELECT * FROM {files} WHERE fid = %d", $fid));
+      $files[$fid] = $file;
+    }
+    $return_files[] = $files[$fid];
+  }
+  return $return_files;
+}
