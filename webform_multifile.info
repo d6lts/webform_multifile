@@ -6,6 +6,7 @@ package = Webform
 
 dependencies[] = webform
 dependencies[] = transliteration
+dependencies[] = file
 
 files[] = multifile.inc
 files[] = webform_multifile.install
