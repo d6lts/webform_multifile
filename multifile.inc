@@ -411,7 +411,7 @@ function theme_webform_render_multifile($variables) {
     $suffix = '';
     foreach (webform_get_multifile($fids) as $file) {
       $suffix .= '<div class="multifile-file"> ';
-      $suffix .= l(t('Download !filename', array('!filename' => webform_multifile_name($file->filepath))), webform_multifile_url($file->filepath));
+      $suffix .= l(t('Download !filename', array('!filename' => webform_multifile_name($file->uri))), webform_multifile_url($file->uri));
       $suffix .= ' ( ' . l(t('Delete'), "node/$webform_nid/submission/$submission_id/multifile_delete/$component_id/$file->fid") . ' )';
       $suffix .= ' </div>';
     }
