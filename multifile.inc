@@ -461,8 +461,7 @@ function _webform_required_multifile($element, $form_state) {
     }
     $key = array_shift($parents);
   }
-
-  if (!$found || (empty($values['_fid']) && empty($values['_old_fids']))) {
+  if (!$found || (empty($values['_fids']) && empty($values['_old_fids']))) {
     if (empty($_FILES['files']['name'][$form_key]) && $component['mandatory']) {
       form_error($element, t('%field field is required.', array('%field' => $component['name'])));
     }
@@ -474,7 +473,7 @@ function _webform_required_multifile($element, $form_state) {
  *
  * Ensure that the uploaded file matches the specified file types.
  */
-function _webform_validate_multifile($element, &$form_state) {
+function _webform_validate_multifile(&$element, &$form_state) {
   $component = $element['#webform_component'];
   $form_key = implode('_', $element['#parents']);
 
@@ -523,14 +522,13 @@ function _webform_validate_multifile($element, &$form_state) {
       $keys = _webform_multifile_convert_files_array($form_key);
       $fids = array();
       foreach ($keys as $key) {
-
-        $file = file_save_upload($key, array(), $upload_dir);
+        $file = file_save_upload($key, array('file_validate_extensions' => array(implode(' ', $extensions))), $upload_dir);
         if ($file) {
-          @chmod($file->filepath, 0664);
+          @chmod(drupal_realpath($file->uri), 0664);
           $fids[] = $file->fid;
         }
         else {
-          drupal_set_message(t('The uploaded file %filename was unable to be saved. The destination directory may not be writable.', array('%filename' => $file->filename)), 'error');
+          drupal_set_message(t('The uploaded file was unable to be saved. The destination directory may not be writable.'), 'error');
         }
       }
       // Set the hidden field value.
