@@ -54,6 +54,7 @@ function _webform_theme_multifile() {
  * Implementation of _webform_edit_component().
  */
 function _webform_edit_multifile($component) {
+    webform_component_include('file');
     $form = array();
     $form['#theme'] = 'webform_edit_multifile';
     $form['#element_validate'] = array('_webform_edit_file_check_directory');
