@@ -329,10 +329,9 @@ function theme_webform_edit_multifile($variables) {
  */
 function _webform_render_multifile($component, $value = NULL, $filter = TRUE) {
   drupal_add_js(drupal_get_path('module', 'webform_multifile') .'/multifile/jquery.MultiFile.js');
-  drupal_add_js(drupal_get_path('module', 'webform_multifile') .'/webform_multifile.js');
+  drupal_add_js(drupal_get_path('module', 'webform_multifile') .'/webform_multifile.js', array('scope' => 'footer'));
   $id = 'MultiFile-identifier-'. str_replace('_', '-', $component['form_key']);
-  //drupal_add_js(array('webform_multifile' => array('id' => $id)), 'setting');
-  $component['extra']['attributes']['class'][] = 'form-item multi MultiFile-identifier-'. $id;
+  $component['extra']['attributes']['class'][] = 'form-item multi ' . $id;
 
   $node = node_load($component['nid']);
   $form_key = implode('_', webform_component_parent_keys($node, $component));
@@ -345,21 +344,21 @@ function _webform_render_multifile($component, $value = NULL, $filter = TRUE) {
     '#description' => $filter ? _webform_filter_descriptions($component['extra']['description']) : $component['extra']['description'],
     '#attributes' => $component['extra']['attributes'],
     '#tree' => FALSE, // file_check_upload assumes a flat $_FILES structure.
-    '#suffix' => "<div class='outer'><div class='inner'></div></div><script type='text/javascript'>\n/* <![CDATA[ */\n".
-      // Stores all the settings for each field in an array so the javascript files can load later
-      "if (typeof MultiFile_fields == 'undefined') {MultiFile_fields = []}".
-      "MultiFile_fields.push({id :'$id', properties : {".
-        //'namePattern: "'.$component['form_key'].'[]",'.
-        //"list: '#$id .inner', $events".
-        "accept:'" . join('|', $current_types) . "', STRING: {".
-          "remove:'" . t('Remove') . "',".
-          "denied:'" . t('You are kindly asked not to submit !ext files in this form.', array('!ext' => '$ext')) . "',".
-          "duplicate:'" . t('The file !file has already been selected and will be uploaded once you submit this form.', array('!file' => '$file')) . "'".
-        "}".
-      "}});".
-      // If jQuery is already loaded, grab the newest item from the array and use it to run Multifile
-      "if (window.jQuery) { jQuery('input[type=file].multi.$id').MultiFile(MultiFile_fields.pop().properties)}".
-    "\n/* ]]> */\n</script>",
+    '#suffix' => "<div class='outer'><div class='inner'></div></div>",
+    "#attached" => array(
+      'js' => array(
+        "(function ($) { \n" .
+        // Stores all the settings for each field in an array so the javascript files can load later
+        "  if (typeof MultiFile_fields == 'undefined') {MultiFile_fields = []} \n".
+        "  MultiFile_fields.push(\n  {\n    id :'$id',\n    properties : {\n".
+          "        accept:'" . join('|', $current_types) . "',\n        STRING: {\n".
+          "          remove:'" . t('Remove') . "',\n".
+          "          denied:'" . t('You are kindly asked not to submit !ext files in this form.', array('!ext' => '$ext')) . "',\n".
+          "          duplicate:'" . t('The file !file has already been selected and will be uploaded once you submit this form.', array('!file' => '$file')) . "'\n".
+          "        }\n".
+        "      }\n    }\n  );\n}) (jQuery);" => array('type' => 'inline'),
+      )
+    ),
     '#element_validate' => array(
       '_webform_validate_multifile',
       '_webform_required_multifile',  // Custom required routine.
