@@ -57,8 +57,8 @@ function _webform_edit_multifile($component) {
     webform_component_include('file');
     $form = array();
     $form['#theme'] = 'webform_edit_multifile';
-    $form['#element_validate'] = array('_webform_edit_file_check_directory');
-    $form['#after_build'] = array('_webform_edit_file_check_directory');
+    $form['#element_validate'] = array('_webform_edit_multifile_check_directory');
+    $form['#after_build'] = array('_webform_edit_multifile_check_directory');
 
     $form['validation']['filtering'] = array(
       '#element_validate' => array('_webform_edit_multifile_filtering_validate'),
@@ -149,7 +149,7 @@ function _webform_edit_multifile($component) {
       '#default_value' => $component['extra']['directory'],
       '#description' => t('You may optionally specify a sub-directory to store your files.'),
       '#weight' => 5,
-      '#field_prefix' => 'webform/',
+      '#field_prefix' => 'sites/default/files/webform/',
     );
     $form['display']['progress_indicator'] = array(
       '#type' => 'radios',
@@ -194,19 +194,22 @@ function _webform_edit_multifile_size_validate($element) {
  * Ensure that the destination directory exists and is writable.
  */
 function _webform_edit_multifile_check_directory($element) {
-  $base_dir = file_directory_path() . '/webform';
-  $base_success = file_check_directory($base_dir, FILE_CREATE_DIRECTORY);
+  $scheme = $element['extra']['scheme']['#value'];
+  $directory = $element['extra']['directory']['#value'];
 
-  $destination_dir = $base_dir . '/' . $element['#value'];
+  $destination_dir = file_stream_wrapper_uri_normalize($scheme . '://' . $directory . '/webform');
 
-  // Try to make the directory recursively before calling file_check_directory().
-  // This may be removed in D7, as recusive is the default there.
-  @mkdir($destination_dir, 0775, TRUE);
-
-  $destination_success = file_check_directory($destination_dir, FILE_CREATE_DIRECTORY);
-  if (!$base_success || !$destination_success) {
-    form_set_error('savelocation', t('The save directory %directory could not be created. Check that the webform files directory is writtable.', array('%directory' => $destination_dir)));
+  // Sanity check input to prevent use parent (../) directories.
+  if (preg_match('/\.\.[\/\\\]/', $destination_dir . '/')) {
+    form_error($element['extra']['directory'], t('The save directory %directory is not valid.', array('%directory' => $directory)));
   }
+  else {
+    $destination_success = file_prepare_directory($destination_dir, FILE_CREATE_DIRECTORY);
+    if (!$destination_success) {
+      form_error($element['extra']['directory'], t('The save directory %directory could not be created. Check that the webform files directory is writable.', array('%directory' => $directory)));
+    }
+  }
+
   return $element;
 }
 
@@ -475,7 +478,6 @@ function _webform_required_multifile($element, $form_state) {
 function _webform_validate_multifile(&$element, &$form_state) {
   $component = $element['#webform_component'];
   $form_key = implode('_', $element['#parents']);
-
   if (empty($_FILES['files']['size'][$form_key]) || !isset($_FILES['files']['size'][$form_key][0]) || empty($_FILES['files']['size'][$form_key][0])) {
     return;
   }
