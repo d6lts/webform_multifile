@@ -3,7 +3,7 @@
     attach: function (context) {
 
       // Add the extra brakets to all the Multifile fields
-      $("input[type=file].multi").each(function(){
+      $("input[type=file].multi").once(function(){
         var field = $(this);
         field.attr('name', field.attr('name') + '[]');
       });
