@@ -21,6 +21,7 @@ function _webform_defaults_multifile() {
         'addextensions' => '',
         'size' => 800,
       ),
+      'max_amount' => -1,
       'scheme' => 'public',
       'directory' => '',
       'progress_indicator' => 'throbber',
@@ -59,6 +60,16 @@ function _webform_edit_multifile($component) {
     $form['#theme'] = 'webform_edit_multifile';
     $form['#element_validate'] = array('_webform_edit_multifile_check_directory');
     $form['#after_build'] = array('_webform_edit_multifile_check_directory');
+    $options[-1] = t('Unlimited');
+    $options += drupal_map_assoc(range(1, 10));
+    $form['validation']['max_amount'] = array(
+      '#title' => t('File limit'),
+      '#description' => t('The number of files the user is allowed to upload per submission with this component.'),
+      '#type' => 'select',
+      '#options' => $options,
+      '#default_value' => $component['extra']['max_amount'],
+      '#parents' => array('extra', 'max_amount'),
+    );
 
     $form['validation']['filtering'] = array(
       '#element_validate' => array('_webform_edit_multifile_filtering_validate'),
@@ -354,6 +365,7 @@ function _webform_render_multifile($component, $value = NULL, $filter = TRUE) {
         // Stores all the settings for each field in an array so the javascript files can load later
         "  if (typeof MultiFile_fields == 'undefined') {MultiFile_fields = []} \n".
         "  MultiFile_fields.push(\n  {\n    id :'$id',\n    properties : {\n".
+          "        max:" . $component['extra']['max_amount'] . ",\n" .
           "        accept:'" . join('|', $current_types) . "',\n        STRING: {\n".
           "          remove:'" . t('Remove') . "',\n".
           "          denied:'" . t('You are kindly asked not to submit !ext files in this form.', array('!ext' => '$ext')) . "',\n".
