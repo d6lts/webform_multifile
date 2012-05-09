@@ -10,14 +10,15 @@ function webform_multifile_requirements() {
     'title' => $t('Transliteration'),
     'value' => $info['version'],
   );
+  dpm($info);
   $version = explode('-', $info['version']);
   $version = explode('.', $version[1]);
-  //check for latest dev version (format = 6.x-3.x-dev)
-  if (((int)$version[0] <= 3) && $version[1] != 'x') {
+  //check for latest dev version (format = 6.x-3.0+16-dev)
+  if (((int)$version[0] <= 3) && strpos($version[1], '+') !== FALSE) {
     //check version (format = 6.x-3.0)
     if (((int)$version[0] < 3) || ((int)$version[0] == 3 && (int)$version[1] <= 0)) {
       $requirements['transliteration']['description'] = $t('The Transliteration
-        module\'s version needs to be 3.0 or higher. If that version is not yet
+        module\'s version needs to be 3.1 or higher. If that version is not yet
         available, you need to use Transliteration\'s latest dev version.');
       $requirements['transliteration']['severity'] = REQUIREMENT_ERROR;
     }

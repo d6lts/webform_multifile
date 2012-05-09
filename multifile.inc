@@ -21,6 +21,7 @@ function _webform_defaults_multifile() {
         'addextensions' => '',
         'size' => 800,
       ),
+      'max_amount' => -1,
       'savelocation' => '',
       'width' => '',
       'title_display' => 0,
@@ -53,7 +54,16 @@ function _webform_theme_multifile() {
 function _webform_edit_multifile($component) {
     $form = array();
     $form['#theme'] = 'webform_edit_multifile';
-
+    $options[-1] = t('Unlimited');
+    $options += drupal_map_assoc(range(1, 10));
+    $form['validation']['max_amount'] = array(
+      '#title' => t('File limit'),
+      '#description' => t('The number of files the user is allowed to upload per submission with this component.'),
+      '#type' => 'select',
+      '#options' => $options,
+      '#default_value' => $component['extra']['max_amount'],
+      '#parents' => array('extra', 'max_amount'),
+    );
     $form['validation']['filtering'] = array(
       '#element_validate' => array('_webform_edit_multifile_filtering_validate'),
       '#parents' => array('extra', 'filtering'),
@@ -324,6 +334,7 @@ function _webform_render_multifile($component, $value = NULL, $filter = TRUE) {
       "MultiFile_fields.push({id :'$id', properties : {".
         //'namePattern: "'.$component['form_key'].'[]",'.
         //"list: '#$id .inner', $events".
+        "max:" . $component['extra']['max_amount'] . ",\n" .
         "accept:'" . join('|', $current_types) . "', STRING: {".
           "remove:'" . t('Remove') . "',".
           "denied:'" . t('You are kindly asked not to submit !ext files in this form.', array('!ext' => '$ext')) . "',".
