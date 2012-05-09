@@ -10,7 +10,6 @@ function webform_multifile_requirements() {
     'title' => $t('Transliteration'),
     'value' => $info['version'],
   );
-  dpm($info);
   $version = explode('-', $info['version']);
   $version = explode('.', $version[1]);
   //check for latest dev version (format = 6.x-3.0+16-dev)
