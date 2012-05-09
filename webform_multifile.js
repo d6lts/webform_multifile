@@ -1,4 +1,11 @@
 Drupal.behaviors.webform_multifile = function (context) {
+
+  // Add the extra brakets to all the Multifile fields
+  $("input[type=file].multi").each(function(){
+    var field = $(this);
+    field.attr('name', field.attr('name') + '[]');
+  });
+
   // Re-initialize multifile fields with the proper settings
   if(typeof MultiFile_fields !== 'undefined'){
     for(var i=0; i<MultiFile_fields.length; i++){
@@ -6,9 +13,5 @@ Drupal.behaviors.webform_multifile = function (context) {
     }
   }
 
-  // Add the extra brakets to all the Multifile fields
-  $("input[type=file].multi").each(function(){
-    var field = $(this);
-    field.attr('name', field.attr('name') + '[]');
-  });
+  
 }
