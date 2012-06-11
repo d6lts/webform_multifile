@@ -675,8 +675,8 @@ function _webform_analysis_multifile($component, $sids = array()) {
 
   $rows[0] = array(t('Left Blank'), ($submissions - $nonblanks));
   $rows[1] = array(t('User uploaded file'), $nonblanks);
-  $rows[2] = array(t('Average uploaded files'), $numfiles / $nonblanks);
-  $rows[3] = array(t('Average uploaded file size'), ($sizetotal != 0 ? (int) (($sizetotal/$numfiles)/1024) . ' KB' : '0'));
+  $rows[2] = array(t('Average uploaded files'), ($nonblanks == 0) ? 0 : $numfiles / $nonblanks);
+  $rows[3] = array(t('Average uploaded file size'), (($sizetotal != 0 && $numfiles != 0) ? (int) (($sizetotal/$numfiles)/1024) . ' KB' : '0'));
   return $rows;
 }
 
