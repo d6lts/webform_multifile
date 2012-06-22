@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function webform_multifile_menu() {
   $items[] = array();
@@ -27,7 +27,7 @@ function webform_multifile_menu() {
 }
 
 /**
- * Implementation of hook_webform_component_info().
+ * Implements hook_webform_component_info().
  */
 function webform_multifile_webform_component_info() {
   $components = array();
@@ -74,11 +74,11 @@ function webform_multifile_file_download($uri) {
   $q->join('webform_component', 'wc', 'wsd.cid = wc.cid');
   $multifile_scan = $q->fields('wsd')->condition('wc.type', 'multifile', '=')->execute();
   $submission_id = $submission_uid = NULL;
-  while($multifile_row = $multifile_scan->fetchAssoc()) {
-  	$file_ids = unserialize($multifile_row['data']);
-  	if (in_array($target_document->fid, $file_ids) ) {
-  		$submission_id = $multifile_row['sid'];
-  	}
+  while ($multifile_row = $multifile_scan->fetchAssoc()) {
+    $file_ids = unserialize($multifile_row['data']);
+    if (in_array($target_document->fid, $file_ids) ) {
+      $submission_id = $multifile_row['sid'];
+    }
   }
   if ($submission_id) {
     $submission_uid = db_select('webform_submissions', 'ws')->fields('ws', array('uid'))->condition('sid', $submission_id, '=')->execute()->fetchObject();

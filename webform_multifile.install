@@ -1,5 +1,9 @@
 <?php
 /**
+ * @file Webform multifile install functions.
+ */
+
+/**
  * Implements hook_requirements().
  */
 function webform_multifile_requirements() {
