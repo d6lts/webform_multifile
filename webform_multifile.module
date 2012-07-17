@@ -4,7 +4,7 @@
  * Implements hook_menu().
  */
 function webform_multifile_menu() {
-  $items[] = array();
+  $items = array();
 
   $items['node/%webform_menu/submission/%webform_menu_submission/multifile_delete/%/%'] = array(
     'title' => 'Delete multifile upload',
