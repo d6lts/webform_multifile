@@ -488,6 +488,7 @@ function _webform_validate_multifile($element, &$form_state) {
   }
 
   foreach ($_FILES['files']['name'][$form_key] as $key => $filename) {
+    $filename = _webform_multifile_get_files_array_value($filename, $form_key);
     $dot = strrpos($filename, '.');
     $extension = drupal_strtolower(drupal_substr($filename, $dot + 1));
     $file_error = FALSE;
@@ -497,6 +498,7 @@ function _webform_validate_multifile($element, &$form_state) {
     }
   }
   foreach ($_FILES['files']['size'][$form_key] as $key => $size) {
+    $size = (int)_webform_multifile_get_files_array_value($size, $form_key);
     // Now let's check the file size (limit is set in KB).
     if ($size > $component['extra']['filtering']['size'] * 1024) {
       form_error($element, t("The file '%filename' is too large (%filesize KB). Please upload a file %maxsize KB or smaller.", array('%filename' => $_FILES['files']['name'][$form_key][$key], '%filesize' => (int) ($size/1024), '%maxsize' => $component['extra']['filtering']['size'])));
@@ -767,28 +769,32 @@ function _webform_multifile_convert_files_array($form_key) {
   // file_save_upload expects the usual Forms API _FILES structure, which is
   // incompatible to jquery.MultiFile.js
   $keys = array();
+  $file_properties = array('type', 'tmp_name', 'error', 'size', 'orig_name');
   foreach ($_FILES['files']['type'][$form_key] as $key => $empty) {
     $newkey = $form_key . $key;
     if (!empty($_FILES['files']['orig_name'][$form_key][$key])) {
-      $_FILES['files']['name'][$newkey] = $_FILES['files']['orig_name'][$form_key][$key];
+      $_FILES['files']['name'][$newkey] = _webform_multifile_get_files_array_value($_FILES['files']['orig_name'][$form_key][$key], $form_key);
     }
     else {
-      $_FILES['files']['name'][$newkey] = $_FILES['files']['name'][$form_key];
+      $_FILES['files']['name'][$newkey] = _webform_multifile_get_files_array_value($_FILES['files']['name'][$form_key][$key], $form_key);
     }
-    $_FILES['files']['type'][$newkey] = $_FILES['files']['type'][$form_key][$key];
-    $_FILES['files']['tmp_name'][$newkey] = $_FILES['files']['tmp_name'][$form_key][$key];
-    $_FILES['files']['error'][$newkey] = $_FILES['files']['error'][$form_key][$key];
-    $_FILES['files']['size'][$newkey] = $_FILES['files']['size'][$form_key][$key];
-    $_FILES['files']['orig_name'][$newkey] = $_FILES['files']['orig_name'][$form_key][$key];
+    foreach ($file_properties as $file_property) {
+      $_FILES['files'][$file_property][$newkey] = _webform_multifile_get_files_array_value($_FILES['files'][$file_property][$form_key][$key], $form_key);
+    }
     $keys[] = $newkey;
   }
   unset($_FILES['files']['name'][$form_key]);
-  unset($_FILES['files']['type'][$form_key]);
-  unset($_FILES['files']['tmp_name'][$form_key]);
-  unset($_FILES['files']['error'][$form_key]);
-  unset($_FILES['files']['size'][$form_key]);
-  unset($_FILES['files']['orig_name'][$form_key]);
+  foreach ($file_properties as $file_property) {
+    unset($_FILES['files'][$file_property][$form_key]);
+  }
   return $keys;
+}
+
+/**
+ * Helper function.
+ */
+function _webform_multifile_get_files_array_value($value, $form_key) {
+  return (is_array($value) && isset($value[$form_key])) ? $value[$form_key] : $value;
 }
 
 /**
