@@ -342,8 +342,8 @@ function theme_webform_edit_multifile($variables) {
  * Implementation of _webform_render_component().
  */
 function _webform_render_multifile($component, $value = NULL, $filter = TRUE) {
-  drupal_add_js(drupal_get_path('module', 'webform_multifile') . '/multifile/jquery.MultiFile.js');
-  drupal_add_js(drupal_get_path('module', 'webform_multifile') . '/webform_multifile.js', array('scope' => 'footer'));
+  //drupal_add_js(drupal_get_path('module', 'webform_multifile') . '/multifile/jquery.MultiFile.js');
+  //drupal_add_js(drupal_get_path('module', 'webform_multifile') . '/webform_multifile.js', array('scope' => 'footer'));
   $id = 'MultiFile-identifier-' . str_replace('_', '-', $component['form_key']);
   $component['extra']['attributes']['class'][] = 'form-item multi ' . $id;
 
@@ -361,6 +361,8 @@ function _webform_render_multifile($component, $value = NULL, $filter = TRUE) {
     '#suffix' => "<div class='outer'><div class='inner'></div></div>",
     "#attached" => array(
       'js' => array(
+        drupal_get_path('module', 'webform_multifile') . '/multifile/jquery.MultiFile.js' => array('type' => 'file'),
+        drupal_get_path('module', 'webform_multifile') . '/webform_multifile.js' => array('type' => 'file', 'scope' => 'footer'),
         "(function ($) { \n" .
         // Stores all the settings for each field in an array so the javascript files can load later
         "  if (typeof MultiFile_fields == 'undefined') {MultiFile_fields = []} \n" .
@@ -657,7 +659,7 @@ function _webform_analysis_multifile($component, $sids = array()) {
   $sizetotal = 0;
   $submissions = 0;
   $numfiles = 0;
-  
+
   while ($data = $result->fetchAssoc()) {
     if ($fids = unserialize($data['data'])) {
       $counter = 0;
