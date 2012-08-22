@@ -5,7 +5,7 @@
       // Add the extra brakets to all the Multifile fields
       $("input[type=file].multi").once(function(){
         var $field = $(this);
-        var newname = $field.attr('name') + '[]';
+        var newname = ($field.attr('name') + '[]');
         if ($.browser.msie === true) {
           $field.replaceWith($($field.get(0).outerHTML.replace(/name=\w+/ig, 'name=' + newname)));
         }
