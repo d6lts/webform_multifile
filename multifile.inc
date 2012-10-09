@@ -773,10 +773,10 @@ function _webform_multifile_convert_files_array($form_key) {
   foreach ($_FILES['files']['type'][$form_key] as $key => $empty) {
     $newkey = $form_key . $key;
     if (!empty($_FILES['files']['orig_name'][$form_key][$key])) {
-      $_FILES['files']['name'][$newkey] = _webform_multifile_get_files_array_value($_FILES['files']['orig_name'][$form_key][$key], $form_key);
+      $_FILES['files']['name'][$newkey] = transliteration_clean_filename(_webform_multifile_get_files_array_value($_FILES['files']['orig_name'][$form_key][$key], $form_key));
     }
     else {
-      $_FILES['files']['name'][$newkey] = _webform_multifile_get_files_array_value($_FILES['files']['name'][$form_key][$key], $form_key);
+      $_FILES['files']['name'][$newkey] = transliteration_clean_filename(_webform_multifile_get_files_array_value($_FILES['files']['name'][$form_key][$key], $form_key));
     }
     foreach ($file_properties as $file_property) {
       $_FILES['files'][$file_property][$newkey] = _webform_multifile_get_files_array_value($_FILES['files'][$file_property][$form_key][$key], $form_key);
