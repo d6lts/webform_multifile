@@ -350,6 +350,7 @@ function _webform_render_multifile($component, $value = NULL, $filter = TRUE) {
   $current_types = isset($component['extra']['filtering']['types']) ? $component['extra']['filtering']['types'] : array();
   $element[$form_key] = array(
     '#type' => 'file',
+    '#translatable' => array('title', 'description'),
     '#title' => $filter ? _webform_filter_xss($component['name']) : $component['name'],
     '#title_display' => $component['extra']['title_display'] ? $component['extra']['title_display'] : 'before',
     //'#required' => $component['mandatory'], // Drupal core bug with required file uploads.
