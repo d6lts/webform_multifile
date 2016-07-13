@@ -71,10 +71,10 @@ function webform_multifile_delete_form_submit($form, &$form_state) {
   $file = file_load($form_state['values']['fid']);
   file_delete($file);
   // Update the submission data and re-save it without the deleted fid.
-  $fids = unserialize($form_state['values']['submission']->data[$form_state['values']['component_id']]['value'][0]);
+  $fids = drupal_json_decode($form_state['values']['submission']->data[$form_state['values']['component_id']]['value'][0]);
   $key = array_search($file->fid, $fids);
   unset($fids[$key]);
-  $form_state['values']['submission']->data[$form_state['values']['component_id']]['value'][0] = serialize($fids);
+  $form_state['values']['submission']->data[$form_state['values']['component_id']]['value'][0] = drupal_json_encode($fids);
   module_load_include('inc', 'webform', 'includes/webform.submissions');
   webform_submission_update($form_state['values']['webform'], $form_state['values']['submission']);
   $form_state['redirect'] = 'node/' . $form_state['values']['webform']->nid . '/submission/' . $form_state['values']['submission']->sid . '/edit';
@@ -94,7 +94,7 @@ function webform_multifile_file_download($uri) {
   $multifile_scan = $q->execute();
   $submission_id = $submission_uid = NULL;
   while ($multifile_row = $multifile_scan->fetchAssoc()) {
-    $file_ids = unserialize($multifile_row['data']);
+    $file_ids = drupal_json_decode($multifile_row['data']);
     if (in_array($target_document->fid, $file_ids) ) {
       $submission_id = $multifile_row['sid'];
     }

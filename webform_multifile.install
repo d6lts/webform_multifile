@@ -30,3 +30,34 @@ function webform_multifile_requirements($phase) {
   }
   return $requirements;
 }
+
+/**
+ * Convert serialized php arrays to json encoded strings.
+ */
+function webform_multifile_update_7001(&$sandbox) {
+  $q = db_select('webform_submitted_data', 'd')
+      ->fields('d');
+  $q->join('webform_component', 'c', 'c.cid = d.cid');
+  $q->condition('c.type', 'multifile');
+  if (!isset($sandbox['total'])) {
+    $sandbox['current'] = 0;
+    $sandbox['total'] = $q->countQuery()->execute()->fetchField();
+  }
+  $q->range($sandbox['current'], 50);
+  module_load_include('inc', 'webform_multifile', 'safe_unserialize');
+  foreach ($q->execute()->fetchAll() as $data) {
+    $data->data = drupal_json_encode(safe_unserialize($data->data));
+    db_update('webform_submitted_data')
+      ->fields(array('data' => $data->data))
+      ->condition('nid', $data->nid)
+      ->condition('sid', $data->sid)
+      ->condition('cid', $data->cid)
+      ->condition('no', $data->no)
+      ->execute();
+    $sandbox['current']++;
+  }
+  $sandbox['#finished'] = 1;
+  if ($sandbox['current'] < $sandbox['total']) {
+    $sandbox['#finished'] = $sandbox['current'] / $sandbox['total'];
+  }
+}

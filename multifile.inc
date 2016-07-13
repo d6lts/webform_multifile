@@ -423,7 +423,7 @@ function theme_webform_render_multifile($variables) {
   $webform_nid = $element['#webform_component']['nid'];
   $component_id = $element['#webform_component']['cid'];
   $submission_id = arg(3);
-  if ($fids = unserialize($value)) {
+  if ($fids = drupal_json_decode($value)) {
     $suffix = '';
     foreach (webform_get_multifile($fids) as $file) {
       $suffix .= '<div class="multifile-file"> ';
@@ -563,7 +563,7 @@ function _webform_validate_multifile(&$element, &$form_state) {
  * Implementation of _webform_submit_component().
  */
 function _webform_submit_multifile($component, $value) {
-  $old_fids = isset($value['_old_fids']) ? unserialize($value['_old_fids']) : NULL;
+  $old_fids = isset($value['_old_fids']) ? drupal_json_decode($value['_old_fids']) : NULL;
 
   if ($fids = $value['_fids']) {
     $files = webform_get_multifile($fids);
@@ -583,7 +583,7 @@ function _webform_submit_multifile($component, $value) {
   }
 
   if ($fids) {
-    return serialize($fids);
+    return drupal_json_encode($fids);
   }
 }
 
@@ -591,7 +591,7 @@ function _webform_submit_multifile($component, $value) {
  * Implementation of _webform_display_component().
  */
 function _webform_display_multifile($component, $value, $format = 'html') {
-  $fids = isset($value[0]) ? unserialize($value[0]) : NULL;
+  $fids = isset($value[0]) ? drupal_json_decode($value[0]) : NULL;
   return array(
      '#title' => $component['name'],
      '#value' => $fids ? webform_get_multifile($fids) : NULL,
@@ -632,7 +632,7 @@ function theme_webform_display_multifile($variables) {
  */
 function _webform_delete_multifile($component, $value) {
   // Delete a set of files on an individual submission.
-  $fids = isset($value[0]) ? unserialize($value[0]) : NULL;
+  $fids = isset($value[0]) ? drupal_json_decode($value[0]) : NULL;
   foreach (webform_get_multifile($fids) as $file) {
     file_delete($file);
   }
@@ -660,7 +660,7 @@ function _webform_analysis_multifile($component, $sids = array()) {
   $numfiles = 0;
 
   while ($data = $result->fetchAssoc()) {
-    if ($fids = unserialize($data['data'])) {
+    if ($fids = drupal_json_decode($data['data'])) {
       $counter = 0;
       foreach (webform_get_multifile($fids) as $file) {
         if (isset($file->filesize)) {
@@ -688,7 +688,7 @@ function _webform_analysis_multifile($component, $sids = array()) {
  */
 function _webform_table_multifile($component, $value) {
   $links = array();
-  if ($fids = (isset($value[0]) ? unserialize($value[0]) : FALSE)) {
+  if ($fids = (isset($value[0]) ? drupal_json_decode($value[0]) : FALSE)) {
     foreach (webform_get_multifile($fids) as $file) {
       if (!empty($file->fid)) {
         $link = l(webform_multifile_name($file->uri), webform_multifile_url($file->uri));
@@ -720,7 +720,7 @@ function _webform_csv_headers_multifile($component, $export_options) {
 function _webform_csv_data_multifile($component, $export_options, $value) {
   $filenames = array();
   $sizes = array();
-  if ($fids = (isset($value[0]) ? unserialize($value[0]) : FALSE)) {
+  if ($fids = (isset($value[0]) ? drupal_json_decode($value[0]) : FALSE)) {
     foreach (webform_get_multifile($fids) as $file) {
       $filenames[] = webform_multifile_url($file->uri);
       $sizes[] = (int) ($file->filesize/1024);
@@ -740,7 +740,7 @@ function _webform_csv_data_multifile($component, $export_options, $value) {
  */
 function _webform_get_files_multifile($value) {
   $files = array();
-  if ($fids = (isset($value[0]) ? unserialize($value[0]) : FALSE)) {
+  if ($fids = (isset($value[0]) ? drupal_json_decode($value[0]) : FALSE)) {
     foreach (webform_get_multifile($fids) as $file) {
       $files[] = $file;
     }
@@ -832,7 +832,7 @@ function _webform_multifile_get_files_array_value($value, $form_key) {
  */
 function _webform_attachments_multifile($component, $value) {
   static $files = array();
-  $fids = unserialize($value[0]);
+  $fids = drupal_json_decode($value[0]);
   $return_files = array();
   foreach ($fids as $fid) {
     if (!isset($files[$fid])) {
