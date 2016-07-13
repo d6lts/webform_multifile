@@ -72,10 +72,11 @@ function webform_multifile_delete_form($form, &$form_state, $webform, $submissio
 + * Form submit callback.
 + */
 function webform_multifile_delete_form_submit($form, &$form_state) {
+  module_load_include('inc', 'webform_multifile', 'safe_unserialize');
   $filepath = file_load($form_state['values']['filepath']);
   file_delete($filepath);
   // Update the submission data and re-save it without the deleted fid.
-  $fids = unserialize($form_state['values']['submission']->data[$form_state['values']['component_id']]['value'][0]);
+  $fids = safe_unserialize($form_state['values']['submission']->data[$form_state['values']['component_id']]['value'][0]);
   $key = array_search($form_state['values']['fid'], $fids);
   unset($fids[$key]);
   $form_state['values']['submission']->data[$form_state['values']['component_id']]['value'][0] = serialize($fids);

@@ -394,7 +394,8 @@ function theme_webform_render_multifile($element) {
   $webform_nid = $element['#webform_component']['nid'];
   $component_id = $element['#webform_component']['cid'];
   $submission_id = arg(3);
-  if ($fids = unserialize($value)) {
+  module_load_include('inc', 'webform_multifile', 'safe_unserialize');
+  if ($fids = safe_unserialize($value)) {
     $suffix = '';
     foreach (webform_get_multifile($fids) as $file) {
       $suffix .= '<div class="multifile-file"> ';
@@ -538,7 +539,8 @@ function _webform_validate_multifile($element, &$form_state) {
  * Implementation of _webform_submit_component().
  */
 function _webform_submit_multifile($component, $value) {
-  $old_fids = isset($value['_old_fids']) ? unserialize($value['_old_fids']) : NULL;
+  module_load_include('inc', 'webform_multifile', 'safe_unserialize');
+  $old_fids = isset($value['_old_fids']) ? safe_unserialize($value['_old_fids']) : NULL;
 
   if ($fids = $value['_fids']) {
     $files = webform_get_multifile($fids);
@@ -564,7 +566,8 @@ function _webform_submit_multifile($component, $value) {
  * Implementation of _webform_display_component().
  */
 function _webform_display_multifile($component, $value, $format = 'html') {
-  $fids = isset($value[0]) ? unserialize($value[0]) : NULL;
+  module_load_include('inc', 'webform_multifile', 'safe_unserialize');
+  $fids = isset($value[0]) ? safe_unserialize($value[0]) : NULL;
 
   return array(
      '#title' => $component['name'],
@@ -606,7 +609,8 @@ function theme_webform_display_multifile($element) {
  */
 function _webform_delete_multifile($component, $value) {
   // Delete a set of files on an individual submission.
-  $fids = isset($value[0]) ? unserialize($value[0]) : NULL;
+  module_load_include('inc', 'webform_multifile', 'safe_unserialize');
+  $fids = isset($value[0]) ? safe_unserialize($value[0]) : NULL;
   foreach (webform_get_multifile($fids) as $file) {
     file_delete($file->filepath);
     db_query("DELETE FROM {files} WHERE fid = '%d'", $file->fid);
@@ -617,6 +621,7 @@ function _webform_delete_multifile($component, $value) {
  * Implementation of _webform_analysis_component().
  */
 function _webform_analysis_multifile($component, $sids = array()) {
+  module_load_include('inc', 'webform_multifile', 'safe_unserialize');
   $placeholders = count($sids) ? array_fill(0, count($sids), "'%s'") : array();
   $sidfilter = count($sids) ? " AND sid in (" . implode(",", $placeholders) . ")" : "";
   $query = 'SELECT data ' .
@@ -630,7 +635,7 @@ function _webform_analysis_multifile($component, $sids = array()) {
   $result = db_query($query, array_merge(array($component['nid'], $component['cid']), $sids));
   $numfiles = 0;
   while ($data = db_fetch_array($result)) {
-    if ($fids = unserialize($data['data'])) {
+    if ($fids = safe_unserialize($data['data'])) {
       $counter = 0;
       foreach (webform_get_multifile($fids) as $file) {
         if (isset($file->filesize)) {
@@ -657,8 +662,9 @@ function _webform_analysis_multifile($component, $sids = array()) {
  * Implementation of _webform_table_component().
  */
 function _webform_table_multifile($component, $value) {
+  module_load_include('inc', 'webform_multifile', 'safe_unserialize');
   $links = array();
-  if ($fids = (isset($value[0]) ? unserialize($value[0]) : FALSE)) {
+  if ($fids = (isset($value[0]) ? safe_unserialize($value[0]) : FALSE)) {
     foreach (webform_get_multifile($fids) as $file) {
       if (!empty($file->fid)) {
         $link = l(webform_multifile_name($file->filename), webform_multifile_url($file->filepath));
@@ -688,9 +694,10 @@ function _webform_csv_headers_multifile($component, $export_options) {
  * Implementation of _webform_csv_data_component().
  */
 function _webform_csv_data_multifile($component, $export_options, $value) {
+  module_load_include('inc', 'webform_multifile', 'safe_unserialize');
   $filenames = array();
   $sizes = array();
-  if ($fids = (isset($value[0]) ? unserialize($value[0]) : FALSE)) {
+  if ($fids = (isset($value[0]) ? safe_unserialize($value[0]) : FALSE)) {
     foreach (webform_get_multifile($fids) as $file) {
       $filenames[] = webform_multifile_url($file->filepath);
       $sizes[] = (int) ($file->filesize/1024);
@@ -709,8 +716,9 @@ function _webform_csv_data_multifile($component, $export_options, $value) {
  * Implementation of _webform_get_files_component().
  */
 function _webform_get_files_multifile($value) {
+  module_load_include('inc', 'webform_multifile', 'safe_unserialize');
   $files = array();
-  if ($fids = (isset($value[0]) ? unserialize($value[0]) : FALSE)) {
+  if ($fids = (isset($value[0]) ? safe_unserialize($value[0]) : FALSE)) {
     foreach (webform_get_multifile($fids) as $file) {
       $files[] = $file;
     }
@@ -801,8 +809,9 @@ function _webform_multifile_get_files_array_value($value, $form_key) {
  * Implements _webform_attachments_component().
  */
 function _webform_attachments_multifile($component, $value) {
+  module_load_include('inc', 'webform_multifile', 'safe_unserialize');
   static $files = array();
-  $fids = unserialize($value[0]);
+  $fids = safe_unserialize($value[0]);
   $return_files = array();
   foreach ($fids as $fid) {
     if (!isset($files[$fid])) {
