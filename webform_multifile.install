@@ -46,6 +46,13 @@ function webform_multifile_update_7001(&$sandbox) {
   $q->range($sandbox['current'], 50);
   module_load_include('inc', 'webform_multifile', 'safe_unserialize');
   foreach ($q->execute()->fetchAll() as $data) {
+    // Check to see if this data is already JSON. Can happen when the update
+    // gets interrupted: https://www.drupal.org/node/2811847.
+    $json = drupal_json_decode($data->data);
+    if (json_last_error() === JSON_ERROR_NONE) {
+      $sandbox['current']++;
+      continue;
+    }
     $data->data = drupal_json_encode(safe_unserialize($data->data));
     db_update('webform_submitted_data')
       ->fields(array('data' => $data->data))
