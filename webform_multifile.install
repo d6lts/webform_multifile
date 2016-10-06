@@ -37,7 +37,7 @@ function webform_multifile_requirements($phase) {
 function webform_multifile_update_7001(&$sandbox) {
   $q = db_select('webform_submitted_data', 'd')
       ->fields('d');
-  $q->join('webform_component', 'c', 'c.cid = d.cid');
+  $q->join('webform_component', 'c', 'c.nid = d.nid and c.cid = d.cid');
   $q->condition('c.type', 'multifile');
   if (!isset($sandbox['total'])) {
     $sandbox['current'] = 0;
